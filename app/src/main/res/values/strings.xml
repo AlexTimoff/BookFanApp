@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">BookFansApp</string>
+    <string name="search">Search</string>
+    <string name="search_input">Search by name</string>
+    <string name="want_to_read"> want to \n read </string>
+    <string name="error_network">Network error: Please check your connection</string>
+    <string name="error_server">Server error: Please try again later.</string>
+    <string name="error_unknown">Unknown error</string>
+    <string name="error_no_books">Nothing found for your request</string>
+    <string name="book_rating">Book ratings</string>
+    <string name="about_book">About book</string>
+    <string name="average_rating">average \n rating</string>
+    <string name="reading_now">reading \n now</string>
+    <string name="already_read">already \n read</string>
+    <string name="pages">%1$d pages</string>
+    <string name="year">%1$d year</string>
+    <string name="numbe_of_want_to_read">%1$d want to read</string>
+    <string name="number_of_reading_now">%1$d reading now</string>
+    <string name="number_already_read">%1$d already read</string>
+    <string name="stars">%1$d ★</string>
+    <string name="languages">Languages</string>
+    <string name="no_description">no description</string>
+    <string name="my_books">My books</string>
+    <string name="popular">Popular</string>
+    <string name="database_error">Something went wrong</string>
+    <string name="no_books_in_library">Your library is empty</string>
+    <string name="trends">Trends of the day</string>
+    <string name="your_request">Your books will be here</string>
+    <string name="loading">Loading, please wait...</string>
+    <string name="nothing_found">Nothing found</string>
+</resources>

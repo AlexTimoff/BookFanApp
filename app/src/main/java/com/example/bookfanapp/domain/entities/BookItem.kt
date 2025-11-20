@@ -1,0 +1,25 @@
+package com.example.bookfanapp.domain.entities
+
+data class BookItem (
+    val keyBook: String,
+    val authorKeys: List<String>?,
+    val authorNames: List<String>?,
+    val bookImageKey: String?,
+    val editionCount: Int?,
+    val firstPublishYear: Int?,
+    val languages: List<String>?,
+    val numberPages: Int?,
+    val title: String?,
+    val bookDescription: String?,
+    val persons: List<String>?,
+    val bookRating: Double?,
+    val ratingsCount: Int?,
+    val ratingScoreOne: Int?,
+    val ratingScoreTwo: Int?,
+    val ratingScoreThree: Int?,
+    val ratingScoreFour: Int?,
+    val ratingScoreFive: Int?,
+    val wantReadCount: Int?,
+    val currentlyReadingCount: Int?,
+    val alreadyReadCount: Int?,
+)

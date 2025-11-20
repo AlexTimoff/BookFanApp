@@ -9,7 +9,7 @@ sealed class BarItem(
 ) {
 
     data object Popular: BarItem(
-        route = "subject_books_screen",
+        route = "trending_books_screen",
         icon = R.drawable.ic_popular,
         destinationName = R.string.popular
     )

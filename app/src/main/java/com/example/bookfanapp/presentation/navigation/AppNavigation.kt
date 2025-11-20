@@ -16,7 +16,7 @@ import com.example.bookfanapp.presentation.myBooksScreen.MyBooksViewModel
 import com.example.bookfanapp.presentation.searchBooksScreen.BookListViewModel
 import com.example.bookfanapp.presentation.searchBooksScreen.BooksListScreen
 import com.example.bookfanapp.presentation.sharedViewModel.SharedBookViewModel
-import com.example.bookfanapp.presentation.trendingBooksScreen.SubjectBooksScreen
+import com.example.bookfanapp.presentation.trendingBooksScreen.TrendingBooksScreen
 import com.example.bookfanapp.presentation.trendingBooksScreen.TrendingBooksViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -25,9 +25,9 @@ import org.koin.androidx.compose.koinViewModel
 fun AppNavigation(navController: NavHostController, modifier: Modifier = Modifier) {
     val sharedBookViewModel: SharedBookViewModel = koinViewModel()
 
-    NavHost(navController = navController, startDestination = "subject_books_screen") {
+    NavHost(navController = navController, startDestination = "trending_books_screen") {
 
-        composable("subject_books_screen", enterTransition = {
+        composable("trending_books_screen", enterTransition = {
             slideInHorizontally(
                 initialOffsetX = { fullWidth -> fullWidth },
                 animationSpec = tween(300)
@@ -40,7 +40,7 @@ fun AppNavigation(navController: NavHostController, modifier: Modifier = Modifie
                 )
             }) {
             val subjectBooksViewModel: TrendingBooksViewModel = koinViewModel()
-            SubjectBooksScreen(navController, subjectBooksViewModel,sharedBookViewModel)
+            TrendingBooksScreen(navController, subjectBooksViewModel,sharedBookViewModel)
         }
 
         composable(

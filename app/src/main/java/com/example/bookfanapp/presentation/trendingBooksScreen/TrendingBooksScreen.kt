@@ -46,7 +46,7 @@ import org.koin.androidx.compose.koinViewModel
 
 
 @Composable
-fun SubjectBooksScreen(
+fun TrendingBooksScreen(
     navController: NavHostController,
     viewModel: TrendingBooksViewModel = koinViewModel(),
     sharedBookViewModel: SharedBookViewModel = koinViewModel()

@@ -3,7 +3,6 @@ package com.example.bookfanapp.presentation.trendingBooksScreen
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.bookfanapp.TRENDING_BOOKS
 import com.example.bookfanapp.domain.entities.BookResponse
 import com.example.bookfanapp.domain.errors.ErrorStatus
 import com.example.bookfanapp.domain.errors.FetchBooksError
@@ -12,6 +11,8 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+
+const val TRENDING_BOOKS = "trending_score_hourly_sum:[1 TO *] -subject:\"content_warning:cover\" language:rus -subject:\"content_warning:cover\" -subject:\"content_warning:cover\""
 
 class TrendingBooksViewModel(
     private val ioDispatcher: CoroutineDispatcher,

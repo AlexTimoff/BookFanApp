@@ -1,11 +1,12 @@
 package com.example.bookfanapp.data.apiOpenLibrary.network
 
 import android.util.Log
-import com.example.bookfanapp.BASE_URL
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.statement.HttpResponse
+
+const val BASE_URL = "https://openlibrary.org"
 
 class BookApiService(
     private val httpClient: HttpClient

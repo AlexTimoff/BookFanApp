@@ -28,11 +28,11 @@ class BookDetailsViewModel(
     private val _bookDetailsState = MutableStateFlow(BookDetailsState())
     val bookDetailsState: StateFlow<BookDetailsState> = _bookDetailsState
 
-    fun handleIntent(intent: BookDetailsIntent) {
-        when (intent) {
-            is BookDetailsIntent.LoadDetails -> loadAllDetails(intent.bookItem)
-            is BookDetailsIntent.ChangeFavouriteStatus -> changeFavouriteStatus(intent.bookItem)
-            is BookDetailsIntent.CheckFavouriteStatus -> checkFavouriteStatus(intent.keyBook)
+    fun handleAction(action: BookDetailsAction) {
+        when (action) {
+            is BookDetailsAction.LoadDetails -> loadAllDetails(action.bookItem)
+            is BookDetailsAction.ChangeFavouriteStatus -> changeFavouriteStatus(action.bookItem)
+            is BookDetailsAction.CheckFavouriteStatus -> checkFavouriteStatus(action.keyBook)
         }
     }
 

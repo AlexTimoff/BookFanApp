@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -34,32 +35,53 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.navigation.NavHostController
+import com.example.bookfanapp.domain.entities.BookItem
 import com.example.bookfanapp.domain.errors.ErrorStatus
-import com.example.bookfanapp.ui.view_models.shared.SharedBookIntent
+import com.example.bookfanapp.ui.components.BookItemScreen
+import com.example.bookfanapp.ui.view_models.shared.SharedBookAction
 import com.example.bookfanapp.ui.view_models.shared.SharedBookViewModel
-import com.example.bookfanapp.ui.components.TrendingBookItem
-import com.example.bookfanapp.ui.view_models.trending_books.TrendingBooksIntent
+import com.example.bookfanapp.ui.view_models.trending_books.TrendingBooksAction
 import com.example.bookfanapp.ui.view_models.trending_books.TrendingBooksViewModel
 import com.example.bookfanapp.ui.components.ErrorScreen
 import com.example.bookfanapp.ui.components.LinearProgressLoader
 import com.example.bookfanapp.ui.components.Spacer
+import com.example.bookfanapp.ui.components.TrendingItemScreen
 import com.example.bookfanapp.ui.theme.boldPurple_h5
+import kotlinx.coroutines.flow.distinctUntilChanged
 import org.koin.androidx.compose.koinViewModel
 
 
 @Composable
 fun TrendingBooksScreen(
-    navController: NavHostController,
     viewModel: TrendingBooksViewModel = koinViewModel(),
-    sharedBookViewModel: SharedBookViewModel = koinViewModel()
+    sharedBookViewModel: SharedBookViewModel = koinViewModel(),
+    navigateToDetails: () -> Unit,
+    navigateToSearch: () -> Unit
 ) {
     val state by viewModel.trendingBooksState.collectAsState()
+    val lazyGridState = rememberLazyGridState()
 
     LaunchedEffect(Unit) {
         if (state.bookList.isNullOrEmpty()) {
-            viewModel.handleIntent(TrendingBooksIntent.LoadTrendingBooks(true))
+            viewModel.handleAction(TrendingBooksAction.LoadTrendingBooks(true))
         }
+    }
+
+    LaunchedEffect(lazyGridState) {
+        snapshotFlow { lazyGridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+            .distinctUntilChanged()
+            .collect { lastVisibleItemIndex ->
+                val totalItems = state.bookList?.size
+                    ?: 0
+                val shouldLoadMore = lastVisibleItemIndex == totalItems - 1 && !state.isLoadingPage
+                if (shouldLoadMore) {
+                    viewModel.handleAction(
+                        TrendingBooksAction.LoadTrendingBooks(
+                            false
+                        )
+                    )
+                }
+            }
     }
 
     Column(
@@ -81,7 +103,7 @@ fun TrendingBooksScreen(
                 .fillMaxWidth()
                 .height(56.dp)
                 .clickable {
-                    navController.navigate("book_search_screen")
+                    navigateToSearch()
                 }
                 .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -120,6 +142,19 @@ fun TrendingBooksScreen(
 
             else -> {
                 when (state.errorStatus) {
+                    ErrorStatus.NO_ERROR -> {
+                        TrendingListContent(
+                            state = state,
+                            lazyGridState = lazyGridState,
+                            onBookClick = { bookItem ->
+                                sharedBookViewModel.handleAction(
+                                    action = SharedBookAction.ChooseBook(bookItem)
+                                )
+                                navigateToDetails()
+                            }
+                        )
+                    }
+
                     ErrorStatus.NETWORK_ERROR -> {
                         ErrorScreen(stringResource(R.string.error_network))
                     }
@@ -135,55 +170,35 @@ fun TrendingBooksScreen(
                     ErrorStatus.UNKNOWN_ERROR -> {
                         ErrorScreen(stringResource(R.string.error_unknown))
                     }
-
-                    ErrorStatus.NO_ERROR -> {
-
-                        LazyVerticalGrid(
-                            content = {
-                                val books = state.bookList
-                                if (books != null) {
-                                    itemsIndexed(books) { _, bookItem ->
-                                        TrendingBookItem(
-                                            onClick = {
-                                                sharedBookViewModel.handleIntent(
-                                                    SharedBookIntent.ChooseBook(
-                                                        bookItem
-                                                    )
-                                                )
-                                                navController.navigate("book_details_screen")
-                                            },
-                                            bookItem = bookItem,
-                                        )
-                                    }
-                                }
-
-                            },
-                            contentPadding = PaddingValues(bottom = 100.dp),
-
-                            state = rememberLazyGridState().apply {
-                                LaunchedEffect(state.bookList) {
-                                    snapshotFlow { layoutInfo.visibleItemsInfo.lastOrNull()?.index }
-                                        .collect { lastVisibleItemIndex ->
-                                            if ((lastVisibleItemIndex == (state.bookList?.size
-                                                    ?: 0) - 1)
-                                            ) {
-                                                viewModel.handleIntent(
-                                                    TrendingBooksIntent.LoadTrendingBooks(
-                                                        false
-                                                    )
-                                                )
-                                            }
-                                        }
-                                }
-                            },
-                            columns= GridCells.Fixed(3),
-                            verticalArrangement = Arrangement.spacedBy(20.dp),
-                            horizontalArrangement = Arrangement.spacedBy(20.dp),
-                            modifier = Modifier.padding(top = 20.dp, start = 10.dp, end = 10.dp)
-                        )
-                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun TrendingListContent(
+    state: TrendingBooksState,
+    lazyGridState: LazyGridState,
+    onBookClick: (BookItem) -> Unit
+) {
+    val books = state.bookList ?: return
+    LazyVerticalGrid(
+        state = lazyGridState,
+        contentPadding = PaddingValues(bottom = 100.dp),
+        columns= GridCells.Fixed(3),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+        horizontalArrangement = Arrangement.spacedBy(20.dp),
+        modifier = Modifier.padding(top = 20.dp, start = 10.dp, end = 10.dp)
+    ) {
+        itemsIndexed(
+            items = books,
+            key = { _, book -> book.keyBook }
+        ) { _, bookItem ->
+            TrendingItemScreen(
+                onClick = { onBookClick(bookItem) },
+                bookItem = bookItem
+            )
         }
     }
 }

@@ -20,10 +20,10 @@ class MyBooksViewModel(
     private val _myBooksState = MutableStateFlow(MyBooksState())
     val myBooksState: StateFlow<MyBooksState> = _myBooksState
 
-    fun handleIntent(intent: MyBooksIntent) {
-        when (intent) {
-            is MyBooksIntent.ShowMyBooks -> showMyBooks()
-            is MyBooksIntent.DeleteMyBook -> deleteMyBook(intent.keyBook)
+    fun handleAction(action: MyBooksAction) {
+        when (action) {
+            is MyBooksAction.ShowMyBooks -> showMyBooks()
+            is MyBooksAction.DeleteMyBook -> deleteMyBook(action.keyBook)
         }
     }
 

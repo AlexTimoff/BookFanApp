@@ -24,7 +24,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.example.bookfanapp.R
 import com.example.bookfanapp.domain.entities.BookItem
 import com.example.bookfanapp.ui.view_models.shared.SharedBookViewModel
@@ -34,7 +33,7 @@ import com.example.bookfanapp.ui.components.ShowImage
 import com.example.bookfanapp.ui.theme.regularBlack_h7
 import org.koin.androidx.compose.koinViewModel
 import androidx.compose.ui.graphics.graphicsLayer
-import com.example.bookfanapp.ui.view_models.book_details.BookDetailsIntent
+import com.example.bookfanapp.ui.view_models.book_details.BookDetailsAction
 import com.example.bookfanapp.ui.view_models.book_details.BookDetailsViewModel
 import com.example.bookfanapp.ui.components.BookStarRating
 import com.example.bookfanapp.ui.components.RawButtons
@@ -45,22 +44,22 @@ import com.example.bookfanapp.ui.theme.semiboldGrey_h9
 
 @Composable
 fun BookDetailsScreen(
-    navController: NavController,
     viewModel: BookDetailsViewModel = koinViewModel(),
-    sharedBookViewModel: SharedBookViewModel = koinViewModel()
+    sharedBookViewModel: SharedBookViewModel = koinViewModel(),
+    navigateOnBack: () -> Unit
 ) {
     val state by viewModel.bookDetailsState.collectAsState()
     val chosenBook by sharedBookViewModel.chosenBook.collectAsState()
 
     LaunchedEffect(chosenBook) {
         chosenBook?.let { chosenBook ->
-            viewModel.handleIntent(
-                BookDetailsIntent.CheckFavouriteStatus(
+            viewModel.handleAction(
+                BookDetailsAction.CheckFavouriteStatus(
                     keyBook = chosenBook.keyBook
                 )
             )
-            viewModel.handleIntent(
-                BookDetailsIntent.LoadDetails(
+            viewModel.handleAction(
+                BookDetailsAction.LoadDetails(
                     bookItem = chosenBook
                 )
             )
@@ -105,10 +104,10 @@ fun BookDetailsScreen(
 
             RawButtons(
                 onClickBack = {
-                    navController.popBackStack()
+                    navigateOnBack()
                 },
                 onClickFavorite = {
-                    viewModel.handleIntent(BookDetailsIntent.ChangeFavouriteStatus(bookItem = state.bookItem!!))
+                    viewModel.handleAction(BookDetailsAction.ChangeFavouriteStatus(bookItem = state.bookItem!!))
                 },
                 state = state
             )

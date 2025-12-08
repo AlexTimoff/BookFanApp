@@ -23,9 +23,9 @@ class TrendingBooksViewModel(
     private val _trendingBooksState = MutableStateFlow(TrendingBooksState())
     val trendingBooksState: StateFlow<TrendingBooksState> = _trendingBooksState
 
-    fun handleIntent(intent: TrendingBooksIntent) {
-        when (intent) {
-            is TrendingBooksIntent.LoadTrendingBooks -> loadSubjectsBooks(intent.isInitialLoad)
+    fun handleAction(action: TrendingBooksAction) {
+        when (action) {
+            is TrendingBooksAction.LoadTrendingBooks -> loadSubjectsBooks(action.isInitialLoad)
         }
     }
 

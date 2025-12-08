@@ -40,7 +40,6 @@ fun BookSearchField(
     placeholder: String = "",
     onReset: () -> Unit
 ) {
-
     val keyboardController = LocalSoftwareKeyboardController.current
 
     Row(

@@ -29,7 +29,7 @@ import com.example.bookfanapp.ui.theme.Purple80
 import com.example.bookfanapp.ui.theme.regularGrey
 
 @Composable
-fun TrendingBookItem(
+fun TrendingItemScreen(
     onClick: () -> Unit,
     bookItem: BookItem,
     modifier: Modifier = Modifier,

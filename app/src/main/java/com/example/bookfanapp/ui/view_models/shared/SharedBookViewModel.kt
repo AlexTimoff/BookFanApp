@@ -10,10 +10,10 @@ class SharedBookViewModel: ViewModel() {
     private val _chosenBook = MutableStateFlow<BookItem?>(null)
     val chosenBook: StateFlow<BookItem?> = _chosenBook.asStateFlow()
 
-    fun handleIntent(intent: SharedBookIntent) {
-        when (intent) {
-            is SharedBookIntent.ChooseBook -> {
-                _chosenBook.value = intent.bookItem
+    fun handleAction(action: SharedBookAction) {
+        when (action) {
+            is SharedBookAction.ChooseBook -> {
+                _chosenBook.value = action.bookItem
             }
         }
     }

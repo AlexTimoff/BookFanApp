@@ -10,7 +10,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.bookfanapp.ui.screens.book_details.BookDetailsScreen
 import com.example.bookfanapp.ui.view_models.book_details.BookDetailsViewModel
-import com.example.bookfanapp.ui.screens.home.HomeScreen
 import com.example.bookfanapp.ui.screens.my_books.MyBooksScreen
 import com.example.bookfanapp.ui.view_models.my_books.MyBooksViewModel
 import com.example.bookfanapp.ui.view_models.search_books.SearchBooksViewModel
@@ -25,26 +24,13 @@ import org.koin.androidx.compose.koinViewModel
 fun AppNavigation(navController: NavHostController, modifier: Modifier = Modifier) {
     val sharedBookViewModel: SharedBookViewModel = koinViewModel()
 
-    NavHost(navController = navController, startDestination = "trending_books_screen") {
-
-        composable("trending_books_screen", enterTransition = {
-            slideInHorizontally(
-                initialOffsetX = { fullWidth -> fullWidth },
-                animationSpec = tween(300)
-            )
-        },
-            exitTransition = {
-                slideOutHorizontally(
-                    targetOffsetX = { fullWidth -> -fullWidth },
-                    animationSpec = tween(300)
-                )
-            }) {
-            val subjectBooksViewModel: TrendingBooksViewModel = koinViewModel()
-            TrendingBooksScreen(navController, subjectBooksViewModel,sharedBookViewModel)
-        }
+    NavHost(
+        navController = navController,
+        startDestination = Route.TRENDING_BOOKS_SCREEN.name) {
 
         composable(
-            "book_search_screen", enterTransition = {
+            route=Route.TRENDING_BOOKS_SCREEN.name,
+            enterTransition = {
                 slideInHorizontally(
                     initialOffsetX = { fullWidth -> fullWidth },
                     animationSpec = tween(300)
@@ -56,22 +42,52 @@ fun AppNavigation(navController: NavHostController, modifier: Modifier = Modifie
                     animationSpec = tween(300)
                 )
             }) {
-            val bookListViewModel: SearchBooksViewModel = koinViewModel()
-            SearchBooksScreen(navController, bookListViewModel, sharedBookViewModel)
+            val trendingBooksViewModel: TrendingBooksViewModel = koinViewModel()
+            TrendingBooksScreen(
+                viewModel = trendingBooksViewModel,
+                sharedBookViewModel = sharedBookViewModel,
+                navigateToDetails = {navController.navigate(route = Route.BOOK_DETAILS_SCREEN.name)},
+                navigateToSearch = {navController.navigate(route=Route.SEARCH_BOOKS_SCREEN.name)}
+                )
         }
-        composable("my_books_screen") {
+
+        composable(
+            route = Route.SEARCH_BOOKS_SCREEN.name,
+            enterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { fullWidth -> fullWidth },
+                    animationSpec = tween(300)
+                )
+            },
+            exitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { fullWidth -> -fullWidth },
+                    animationSpec = tween(300)
+                )
+            }) {
+            val searchBooksViewModel: SearchBooksViewModel = koinViewModel()
+
+            SearchBooksScreen(
+                viewModel = searchBooksViewModel,
+                sharedBookViewModel = sharedBookViewModel,
+                navigateToDetails ={navController.navigate(route = Route.BOOK_DETAILS_SCREEN.name)}
+            )
+        }
+        composable(route = Route.MY_BOOKS_SCREEN.name) {
             val myBooksViewModel: MyBooksViewModel = koinViewModel()
-            MyBooksScreen(navController, myBooksViewModel, sharedBookViewModel)
+            MyBooksScreen(
+                viewModel =  myBooksViewModel,
+                sharedBookViewModel=sharedBookViewModel,
+                navigateToDetails = {navController.navigate(route = Route.BOOK_DETAILS_SCREEN.name)}
+                )
         }
 
-        composable("book_details_screen") {
+        composable(Route.BOOK_DETAILS_SCREEN.name) {
             val bookDetailsViewModel: BookDetailsViewModel = koinViewModel()
-            BookDetailsScreen(navController, bookDetailsViewModel, sharedBookViewModel)
+            BookDetailsScreen(
+                viewModel = bookDetailsViewModel,
+                sharedBookViewModel=sharedBookViewModel,
+                navigateOnBack = {navController.popBackStack()})
         }
-
-        composable("home_screen") {
-            HomeScreen(navController)
-        }
-
     }
 }

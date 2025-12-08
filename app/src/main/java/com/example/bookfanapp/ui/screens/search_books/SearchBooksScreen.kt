@@ -19,34 +19,35 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
 import com.example.bookfanapp.R
+import com.example.bookfanapp.domain.entities.BookItem
 import com.example.bookfanapp.domain.errors.ErrorStatus
-import com.example.bookfanapp.ui.components.BookItem
-import com.example.bookfanapp.ui.view_models.search_books.SearchBooksIntent
+import com.example.bookfanapp.ui.components.BookItemScreen
+import com.example.bookfanapp.ui.view_models.search_books.SearchBooksAction
 import com.example.bookfanapp.ui.view_models.search_books.SearchBooksViewModel
-import com.example.bookfanapp.ui.view_models.shared.SharedBookIntent
+import com.example.bookfanapp.ui.view_models.shared.SharedBookAction
 import com.example.bookfanapp.ui.view_models.shared.SharedBookViewModel
 import com.example.bookfanapp.ui.components.BookSearchField
 import com.example.bookfanapp.ui.components.ErrorScreen
 import com.example.bookfanapp.ui.components.InitialSearchScreen
 import com.example.bookfanapp.ui.components.LoadingScreen
 import com.example.bookfanapp.ui.components.Spacer
+import kotlinx.coroutines.flow.distinctUntilChanged
 import org.koin.androidx.compose.koinViewModel
 
 
 @Composable
 fun SearchBooksScreen(
-    navController: NavHostController,
     viewModel: SearchBooksViewModel = koinViewModel(),
-    sharedBookViewModel: SharedBookViewModel = koinViewModel()
+    sharedBookViewModel: SharedBookViewModel = koinViewModel(),
+    navigateToDetails: () -> Unit
 ) {
     val state by viewModel.searchBooksState.collectAsState()
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
-        if(state.bookList.isNullOrEmpty()){
-            viewModel.handleIntent(SearchBooksIntent.Initial)
+        if (state.bookList.isNullOrEmpty()) {
+            viewModel.handleAction(SearchBooksAction.Initial)
         }
         focusRequester.requestFocus()
     }
@@ -62,17 +63,17 @@ fun SearchBooksScreen(
         BookSearchField(
             value = state.bookQuery,
             onValueChange = { bookQuery ->
-                viewModel.handleIntent(SearchBooksIntent.UpdateBookQuery(bookQuery))
+                viewModel.handleAction(SearchBooksAction.UpdateBookQuery(bookQuery))
             },
             onSearch = {
-                viewModel.handleIntent(SearchBooksIntent.LoadBookList(state.bookQuery, true))
+                viewModel.handleAction(SearchBooksAction.LoadBookList(state.bookQuery, true))
             },
             placeholder = stringResource(R.string.search_input),
             modifier = Modifier
                 .onFocusChanged { }
                 .focusRequester(focusRequester),
             onReset = {
-                viewModel.handleIntent(SearchBooksIntent.ResetQuery)
+                viewModel.handleAction(SearchBooksAction.ResetQuery)
             }
         )
 
@@ -89,6 +90,19 @@ fun SearchBooksScreen(
 
             else -> {
                 when (state.errorStatus) {
+                    ErrorStatus.NO_ERROR -> {
+                        BookListContent(
+                            state = state,
+                            viewModel=viewModel,
+                            onBookClick = { bookItem ->
+                                sharedBookViewModel.handleAction(
+                                    action = SharedBookAction.ChooseBook(bookItem)
+                                )
+                                navigateToDetails()
+                            }
+                        )
+                    }
+
                     ErrorStatus.NETWORK_ERROR -> {
                         ErrorScreen(stringResource(R.string.error_network))
                     }
@@ -104,51 +118,50 @@ fun SearchBooksScreen(
                     ErrorStatus.UNKNOWN_ERROR -> {
                         ErrorScreen(stringResource(R.string.error_unknown))
                     }
-
-                    ErrorStatus.NO_ERROR -> {
-                        LazyColumn(
-                            content = {
-                                val books = state.bookList
-                                if (books != null) {
-                                    itemsIndexed(books) { _, bookItem ->
-                                        BookItem(
-                                            onClick = {
-                                                sharedBookViewModel.handleIntent(
-                                                    SharedBookIntent.ChooseBook(
-                                                        bookItem
-                                                    )
-                                                )
-                                                navController.navigate("book_details_screen")
-                                            },
-                                            bookItem = bookItem,
-                                            isButtonAdded = false,
-                                            onFavouriteButtonClick = {}
-                                        )
-                                    }
-                                }
-                            },
-                            contentPadding = PaddingValues(bottom = 100.dp),
-
-                            state = rememberLazyListState().apply {
-                                LaunchedEffect(state.bookList) {
-                                    snapshotFlow { layoutInfo.visibleItemsInfo.lastOrNull()?.index }
-                                        .collect { lastVisibleItemIndex ->
-                                            if ((lastVisibleItemIndex == (state.bookList?.size
-                                                    ?: 0) - 1)
-                                            ) {
-                                                viewModel.handleIntent(
-                                                    SearchBooksIntent.LoadBookList(
-                                                        state.bookQuery, false
-                                                    )
-                                                )
-                                            }
-                                        }
-                                }
-                            }
-                        )
-                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun BookListContent(
+    state: SearchBooksState,
+    viewModel: SearchBooksViewModel,
+    onBookClick: (BookItem) -> Unit
+) {
+    val books = state.bookList ?: return
+    LazyColumn(
+        state = rememberLazyListState().apply {
+            LaunchedEffect(state.bookList) {
+                snapshotFlow { layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+                    .distinctUntilChanged()
+                    .collect { lastVisibleItemIndex ->
+                        val totalItems = state.bookList.size
+                        val shouldLoadMore = lastVisibleItemIndex == totalItems - 1 && !state.isLoadingPage
+                        if (shouldLoadMore) {
+                            viewModel.handleAction(
+                                SearchBooksAction.LoadBookList(
+                                    name = state.bookQuery,
+                                    isFirstLoad = false
+                                )
+                            )
+                        }
+                    }
+            }
+        },
+        contentPadding = PaddingValues(bottom = 100.dp)
+    ) {
+        itemsIndexed(
+            items = books,
+            key = { _, book -> book.keyBook }
+        ) { _, bookItem ->
+            BookItemScreen(
+                onClick = { onBookClick(bookItem) },
+                bookItem = bookItem,
+                isButtonAdded = false,
+                onFavouriteButtonClick = {}
+            )
         }
     }
 }

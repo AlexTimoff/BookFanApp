@@ -15,12 +15,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
 import com.example.bookfanapp.R
-import com.example.bookfanapp.ui.view_models.my_books.MyBooksIntent
+import com.example.bookfanapp.domain.entities.BookItem
+import com.example.bookfanapp.ui.view_models.my_books.MyBooksAction
 import com.example.bookfanapp.ui.view_models.my_books.MyBooksViewModel
-import com.example.bookfanapp.ui.components.BookItem
-import com.example.bookfanapp.ui.view_models.shared.SharedBookIntent
+import com.example.bookfanapp.ui.components.BookItemScreen
+import com.example.bookfanapp.ui.view_models.shared.SharedBookAction
 import com.example.bookfanapp.ui.view_models.shared.SharedBookViewModel
 import com.example.bookfanapp.ui.components.EmptyDatabaseScreen
 import com.example.bookfanapp.ui.components.ErrorScreen
@@ -31,14 +31,14 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun MyBooksScreen(
-    navController: NavHostController,
     viewModel: MyBooksViewModel = koinViewModel(),
-    sharedBookViewModel: SharedBookViewModel = koinViewModel()
+    sharedBookViewModel: SharedBookViewModel = koinViewModel(),
+    navigateToDetails: () -> Unit
 ) {
     val state by viewModel.myBooksState.collectAsState()
 
     LaunchedEffect(Unit) {
-        viewModel.handleIntent(MyBooksIntent.ShowMyBooks)
+        viewModel.handleAction(MyBooksAction.ShowMyBooks)
     }
 
     Column(
@@ -72,31 +72,44 @@ fun MyBooksScreen(
             }
 
             else -> {
-                LazyColumn(
-                    content = {
-                        val books = state.myBookList
-                        itemsIndexed(books) { _, bookItem ->
-                            BookItem(
-                                onClick = {
-                                    sharedBookViewModel.handleIntent(
-                                        SharedBookIntent.ChooseBook(
-                                            bookItem
-                                        )
-                                    )
-                                    navController.navigate("book_details_screen")
-                                },
-                                bookItem = bookItem,
-                                isButtonAdded = true,
-                                favouriteStatus = true,
-                                onFavouriteButtonClick = {
-                                    viewModel.handleIntent(MyBooksIntent.DeleteMyBook(bookItem.keyBook))
-                                }
-                            )
-                        }
+                MyBooksListContent(
+                    state=state,
+                    onBookClick = {bookItem ->
+                        sharedBookViewModel.handleAction(
+                            action = SharedBookAction.ChooseBook(bookItem)
+                        )
+                        navigateToDetails()
                     },
-                    contentPadding = PaddingValues(bottom = 100.dp)
+                    onFavouriteButtonClick = {bookItem ->
+                        viewModel.handleAction(MyBooksAction.DeleteMyBook(bookItem.keyBook))
+                    }
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun MyBooksListContent(
+    state: MyBooksState,
+    onBookClick: (BookItem) -> Unit,
+    onFavouriteButtonClick: (BookItem) -> Unit
+
+) {
+    LazyColumn(
+        contentPadding = PaddingValues(bottom = 100.dp)
+    ) {
+        val books = state.myBookList
+        itemsIndexed(books) { _, bookItem ->
+            BookItemScreen(
+                onClick = { onBookClick(bookItem) },
+                bookItem = bookItem,
+                isButtonAdded = true,
+                favouriteStatus = true,
+                onFavouriteButtonClick = {
+                    onFavouriteButtonClick(bookItem)
+                }
+            )
         }
     }
 }

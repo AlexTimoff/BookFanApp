@@ -21,12 +21,12 @@ class SearchBooksViewModel(
     private val _searchBooksState = MutableStateFlow(SearchBooksState())
     val searchBooksState: StateFlow<SearchBooksState> = _searchBooksState
 
-    fun handleIntent(intent: SearchBooksIntent) {
-        when (intent) {
-            is SearchBooksIntent.Initial -> isInitial()
-            is SearchBooksIntent.LoadBookList -> loadBooksList(intent.name, intent.isFirstLoad)
-            is SearchBooksIntent.UpdateBookQuery -> updateBookQuery(intent.bookQuery)
-            is SearchBooksIntent.ResetQuery -> resetQuery()
+    fun handleAction(action: SearchBooksAction) {
+        when (action) {
+            is SearchBooksAction.Initial -> isInitial()
+            is SearchBooksAction.LoadBookList -> loadBooksList(action.name, action.isFirstLoad)
+            is SearchBooksAction.UpdateBookQuery -> updateBookQuery(action.bookQuery)
+            is SearchBooksAction.ResetQuery -> resetQuery()
         }
     }
 

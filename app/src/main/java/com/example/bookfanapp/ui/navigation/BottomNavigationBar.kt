@@ -1,4 +1,4 @@
-package com.example.bookfanapp.ui.components.navigation_bar
+package com.example.bookfanapp.ui.navigation
 
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.bookfanapp.R
 import com.example.bookfanapp.ui.theme.LightPink
 import com.example.bookfanapp.ui.theme.Purple40
 import com.example.bookfanapp.ui.theme.Purple80
@@ -73,4 +74,29 @@ fun BottomNavigationBar(
         }
     }
 
+}
+
+sealed class BarItem(
+    val route: String,
+    val icon: Int,
+    val destinationName: Int,
+) {
+
+    data object Popular: BarItem(
+        route = Route.TRENDING_BOOKS_SCREEN.name,
+        icon = R.drawable.ic_popular,
+        destinationName = R.string.popular
+    )
+
+    data object SearchBook: BarItem(
+        route = Route.SEARCH_BOOKS_SCREEN.name,
+        icon = R.drawable.ic_search,
+        destinationName = R.string.search
+    )
+
+    data object MyBooks: BarItem(
+        route = Route.MY_BOOKS_SCREEN.name,
+        icon = R.drawable.ic_my_books,
+        destinationName = R.string.my_books
+    )
 }

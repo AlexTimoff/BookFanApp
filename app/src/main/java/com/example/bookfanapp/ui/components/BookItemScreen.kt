@@ -38,7 +38,7 @@ import com.example.bookfanapp.ui.theme.semiboldBlack_h7
 import com.example.bookfanapp.ui.theme.regularGrey
 
 @Composable
-fun BookItem(
+fun BookItemScreen(
     onClick: () -> Unit,
     bookItem: BookItem,
     modifier: Modifier = Modifier,

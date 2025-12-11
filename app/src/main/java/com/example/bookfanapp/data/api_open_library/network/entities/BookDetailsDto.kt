@@ -1,4 +1,4 @@
-package com.example.bookfanapp.data.apiOpenLibrary.network.entities
+package com.example.bookfanapp.data.api_open_library.network.entities
 
 
 import kotlinx.serialization.Serializable

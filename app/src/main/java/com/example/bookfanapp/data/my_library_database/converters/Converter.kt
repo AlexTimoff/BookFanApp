@@ -1,4 +1,4 @@
-package com.example.bookfanapp.data.myLibraryDatabase.converters
+package com.example.bookfanapp.data.my_library_database.converters
 
 import androidx.room.TypeConverter
 import kotlinx.serialization.json.Json

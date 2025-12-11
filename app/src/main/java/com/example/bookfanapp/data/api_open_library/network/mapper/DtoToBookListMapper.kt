@@ -1,6 +1,6 @@
-package com.example.bookfanapp.data.apiOpenLibrary.network.mapper
+package com.example.bookfanapp.data.api_open_library.network.mapper
 
-import com.example.bookfanapp.data.apiOpenLibrary.network.entities.BookResponseDto
+import com.example.bookfanapp.data.api_open_library.network.entities.BookResponseDto
 import com.example.bookfanapp.domain.entities.BookResponse
 
 class DtoToBookListMapper(

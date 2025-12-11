@@ -7,7 +7,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import com.example.bookfanapp.R
 
-
 @Composable
 fun PlaceholderImage(modifier: Modifier = Modifier, contentScale: ContentScale) {
     Image(

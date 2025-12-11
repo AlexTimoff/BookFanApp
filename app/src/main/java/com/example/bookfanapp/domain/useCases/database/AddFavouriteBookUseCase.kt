@@ -6,7 +6,11 @@ import com.example.bookfanapp.domain.repositories.DatabaseRepository
 class AddFavouriteBookUseCase(
     private val repo: DatabaseRepository
 ) {
-    suspend operator fun invoke(bookItem: BookItem){
-        repo.addFavouriteBook(bookItem)
+    suspend operator fun <T> invoke(
+        bookItem: BookItem,
+        createSuccessAction: () -> T,
+        createErrorAction: (String) -> T
+    ): T {
+        return repo.addFavouriteBook(bookItem, createSuccessAction, createErrorAction)
     }
 }

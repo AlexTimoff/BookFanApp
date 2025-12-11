@@ -5,7 +5,11 @@ import com.example.bookfanapp.domain.repositories.DatabaseRepository
 class DeleteFavouriteBookUseCase(
     private val repo: DatabaseRepository
 ) {
-    suspend operator fun invoke(keyBook: String){
-        repo.deleteFavouriteBook(keyBook)
+    suspend operator fun <T> invoke(
+        keyBook: String,
+        createSuccessAction: () -> T,
+        createErrorAction: (String) -> T
+    ): T {
+        return repo.deleteFavouriteBook(keyBook,createSuccessAction,createErrorAction)
     }
 }

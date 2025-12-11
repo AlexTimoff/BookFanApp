@@ -16,8 +16,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -26,13 +24,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.bookfanapp.R
 import com.example.bookfanapp.domain.entities.BookItem
-import com.example.bookfanapp.ui.view_models.shared.SharedBookViewModel
 import com.example.bookfanapp.ui.components.HorizontalBarChart
 import com.example.bookfanapp.ui.components.ShowBlurredBackground
 import com.example.bookfanapp.ui.components.ShowImage
 import com.example.bookfanapp.ui.theme.regularBlack_h7
-import org.koin.androidx.compose.koinViewModel
 import androidx.compose.ui.graphics.graphicsLayer
+import com.example.bookfanapp.domain.errors.ErrorStatus
 import com.example.bookfanapp.ui.view_models.book_details.BookDetailsAction
 import com.example.bookfanapp.ui.view_models.book_details.BookDetailsViewModel
 import com.example.bookfanapp.ui.components.BookStarRating
@@ -44,25 +41,15 @@ import com.example.bookfanapp.ui.theme.semiboldGrey_h9
 
 @Composable
 fun BookDetailsScreen(
-    viewModel: BookDetailsViewModel = koinViewModel(),
-    sharedBookViewModel: SharedBookViewModel = koinViewModel(),
+    viewModel: BookDetailsViewModel,
     navigateOnBack: () -> Unit
 ) {
-    val state by viewModel.bookDetailsState.collectAsState()
-    val chosenBook by sharedBookViewModel.chosenBook.collectAsState()
+    val state by viewModel::bookDetailsState
 
-    LaunchedEffect(chosenBook) {
-        chosenBook?.let { chosenBook ->
-            viewModel.handleAction(
-                BookDetailsAction.CheckFavouriteStatus(
-                    keyBook = chosenBook.keyBook
-                )
-            )
-            viewModel.handleAction(
-                BookDetailsAction.LoadDetails(
-                    bookItem = chosenBook
-                )
-            )
+    LaunchedEffect(state.bookItem) {
+        state.bookItem?.let { chosenBook ->
+            viewModel.dispatch(BookDetailsAction.CheckFavouriteStatus(keyBook = chosenBook.keyBook))
+            viewModel.dispatch(BookDetailsAction.FetchDetails(bookItem = chosenBook))
         }
     }
 
@@ -96,7 +83,7 @@ fun BookDetailsScreen(
 
                 ShowCountRatingsInfo(state.bookItem)
 
-                ShowBookDescription(state.bookItem)
+                ShowBookDescription(state)
 
                 ShowLanguages(state.bookItem)
             }
@@ -107,7 +94,7 @@ fun BookDetailsScreen(
                     navigateOnBack()
                 },
                 onClickFavorite = {
-                    viewModel.handleAction(BookDetailsAction.ChangeFavouriteStatus(bookItem = state.bookItem!!))
+                    viewModel.dispatch(BookDetailsAction.ChangeFavouriteStatus(state.bookItem!!))
                 },
                 state = state
             )
@@ -241,7 +228,7 @@ fun ShowCountRatingsInfo(bookItem: BookItem?) {
 }
 
 @Composable
-fun ShowBookDescription(bookItem: BookItem?) {
+fun ShowBookDescription(state: BookDetailsState) {
     Spacer(20.dp)
     Text(
         text = stringResource(R.string.about_book),
@@ -251,7 +238,14 @@ fun ShowBookDescription(bookItem: BookItem?) {
     )
     Spacer(20.dp)
     Text(
-        text = bookItem?.bookDescription ?: stringResource(R.string.no_description),
+        text = when (state.errorDetailsStatus){
+            ErrorStatus.NETWORK_ERROR -> stringResource(R.string.error_network)
+            ErrorStatus.SERVER_ERROR -> stringResource(R.string.error_server)
+            ErrorStatus.NOTHING_FOUND -> stringResource(R.string.error_no_description)
+            ErrorStatus.UNKNOWN_ERROR -> stringResource(R.string.error_unknown)
+            ErrorStatus.NO_ERROR -> state.bookItem?.bookDescription ?: stringResource(R.string.description)
+        },
+
         style = MaterialTheme.typography.regularBlack_h7,
     )
 }

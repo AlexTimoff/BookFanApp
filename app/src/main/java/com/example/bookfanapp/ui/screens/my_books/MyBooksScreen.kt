@@ -10,8 +10,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -20,25 +18,24 @@ import com.example.bookfanapp.domain.entities.BookItem
 import com.example.bookfanapp.ui.view_models.my_books.MyBooksAction
 import com.example.bookfanapp.ui.view_models.my_books.MyBooksViewModel
 import com.example.bookfanapp.ui.components.BookItemScreen
-import com.example.bookfanapp.ui.view_models.shared.SharedBookAction
-import com.example.bookfanapp.ui.view_models.shared.SharedBookViewModel
 import com.example.bookfanapp.ui.components.EmptyDatabaseScreen
 import com.example.bookfanapp.ui.components.ErrorScreen
 import com.example.bookfanapp.ui.components.LoadingScreen
 import com.example.bookfanapp.ui.components.Spacer
 import com.example.bookfanapp.ui.theme.boldPurple_h5
-import org.koin.androidx.compose.koinViewModel
+import com.example.bookfanapp.ui.view_models.book_details.BookDetailsAction
+import com.example.bookfanapp.ui.view_models.book_details.BookDetailsViewModel
 
 @Composable
 fun MyBooksScreen(
-    viewModel: MyBooksViewModel = koinViewModel(),
-    sharedBookViewModel: SharedBookViewModel = koinViewModel(),
+    viewModel: MyBooksViewModel,
+    bookDetailsViewModel: BookDetailsViewModel,
     navigateToDetails: () -> Unit
 ) {
-    val state by viewModel.myBooksState.collectAsState()
+    val state by viewModel::myBooksState
 
     LaunchedEffect(Unit) {
-        viewModel.handleAction(MyBooksAction.ShowMyBooks)
+        viewModel.dispatch(MyBooksAction.ShowMyBooks)
     }
 
     Column(
@@ -63,8 +60,12 @@ fun MyBooksScreen(
                 LoadingScreen()
             }
 
-            state.error != null -> {
-                ErrorScreen(stringResource(R.string.database_error))
+            state.myBooksError != null -> {
+                ErrorScreen(
+                    stringResource(R.string.database_error),
+                    isTryButtonAdded = true,
+                    onClick = {viewModel.dispatch(MyBooksAction.ShowMyBooks)}
+                )
             }
 
             state.myBookList.isEmpty() -> {
@@ -75,13 +76,11 @@ fun MyBooksScreen(
                 MyBooksListContent(
                     state=state,
                     onBookClick = {bookItem ->
-                        sharedBookViewModel.handleAction(
-                            action = SharedBookAction.ChooseBook(bookItem)
-                        )
+                        bookDetailsViewModel.dispatch(BookDetailsAction.ChooseBook(bookItem))
                         navigateToDetails()
                     },
                     onFavouriteButtonClick = {bookItem ->
-                        viewModel.handleAction(MyBooksAction.DeleteMyBook(bookItem.keyBook))
+                        viewModel.dispatch(MyBooksAction.DeleteMyBook(bookItem.keyBook))
                     }
                 )
             }
@@ -94,7 +93,6 @@ private fun MyBooksListContent(
     state: MyBooksState,
     onBookClick: (BookItem) -> Unit,
     onFavouriteButtonClick: (BookItem) -> Unit
-
 ) {
     LazyColumn(
         contentPadding = PaddingValues(bottom = 100.dp)

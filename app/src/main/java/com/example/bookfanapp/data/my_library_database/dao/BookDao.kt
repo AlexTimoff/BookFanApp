@@ -1,9 +1,9 @@
-package com.example.bookfanapp.data.myLibraryDatabase.dao
+package com.example.bookfanapp.data.my_library_database.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
-import com.example.bookfanapp.data.myLibraryDatabase.entity.BookEntityDto
+import com.example.bookfanapp.data.my_library_database.entity.BookEntityDto
 
 @Dao
 interface BookDao {

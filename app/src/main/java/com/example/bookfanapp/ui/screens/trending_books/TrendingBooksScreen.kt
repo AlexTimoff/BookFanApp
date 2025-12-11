@@ -1,69 +1,53 @@
 package com.example.bookfanapp.ui.screens.trending_books
 
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.bookfanapp.R
-import com.example.bookfanapp.ui.theme.Purple80
-import com.example.bookfanapp.ui.theme.regularPurple_h7
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
 import com.example.bookfanapp.domain.entities.BookItem
 import com.example.bookfanapp.domain.errors.ErrorStatus
-import com.example.bookfanapp.ui.components.BookItemScreen
-import com.example.bookfanapp.ui.view_models.shared.SharedBookAction
-import com.example.bookfanapp.ui.view_models.shared.SharedBookViewModel
 import com.example.bookfanapp.ui.view_models.trending_books.TrendingBooksAction
 import com.example.bookfanapp.ui.view_models.trending_books.TrendingBooksViewModel
 import com.example.bookfanapp.ui.components.ErrorScreen
 import com.example.bookfanapp.ui.components.LinearProgressLoader
 import com.example.bookfanapp.ui.components.Spacer
+import com.example.bookfanapp.ui.components.ToSearchButton
 import com.example.bookfanapp.ui.components.TrendingItemScreen
 import com.example.bookfanapp.ui.theme.boldPurple_h5
+import com.example.bookfanapp.ui.view_models.book_details.BookDetailsAction
+import com.example.bookfanapp.ui.view_models.book_details.BookDetailsViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
-import org.koin.androidx.compose.koinViewModel
 
 
 @Composable
 fun TrendingBooksScreen(
-    viewModel: TrendingBooksViewModel = koinViewModel(),
-    sharedBookViewModel: SharedBookViewModel = koinViewModel(),
+    viewModel: TrendingBooksViewModel,
+    bookDetailsViewModel: BookDetailsViewModel,
     navigateToDetails: () -> Unit,
     navigateToSearch: () -> Unit
 ) {
-    val state by viewModel.trendingBooksState.collectAsState()
+    val state by viewModel::trendingBooksState
     val lazyGridState = rememberLazyGridState()
 
     LaunchedEffect(Unit) {
         if (state.bookList.isNullOrEmpty()) {
-            viewModel.handleAction(TrendingBooksAction.LoadTrendingBooks(true))
+            viewModel.dispatch(trendingBooksAction = TrendingBooksAction.FetchTrendingBooks)
         }
     }
 
@@ -71,15 +55,13 @@ fun TrendingBooksScreen(
         snapshotFlow { lazyGridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
             .distinctUntilChanged()
             .collect { lastVisibleItemIndex ->
-                val totalItems = state.bookList?.size
-                    ?: 0
+                val totalItems = state.bookList?.size ?: 0
+                Log.d("TrendingBooksList", " TotalItems:$totalItems")
                 val shouldLoadMore = lastVisibleItemIndex == totalItems - 1 && !state.isLoadingPage
+                Log.d("TrendingBooksList", "LastVisibleIndex: $lastVisibleItemIndex, TotalItems: $totalItems, isLoadingPage: ${state.isLoadingPage}")
+                Log.d("TrendingBooksList", "Errorstatus: ${state.errorStatus}")
                 if (shouldLoadMore) {
-                    viewModel.handleAction(
-                        TrendingBooksAction.LoadTrendingBooks(
-                            false
-                        )
-                    )
+                    viewModel.dispatch(trendingBooksAction = TrendingBooksAction.FetchMoreTrendingBooks)
                 }
             }
     }
@@ -92,37 +74,7 @@ fun TrendingBooksScreen(
 
         Spacer(5.dp)
 
-        Row(
-            modifier = Modifier
-                .padding(start = 10.dp, top = 15.dp, end = 10.dp)
-                .border(
-                    width = 1.dp,
-                    color = Purple80,
-                    shape = RoundedCornerShape(10.dp)
-                )
-                .fillMaxWidth()
-                .height(56.dp)
-                .clickable {
-                    navigateToSearch()
-                }
-                .padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start,
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_search),
-                contentDescription = stringResource(R.string.search),
-                tint = Purple80,
-                modifier = Modifier.size(24.dp)
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Text(
-                text = stringResource(R.string.search),
-                style = MaterialTheme.typography.regularPurple_h7,
-            )
-        }
+        ToSearchButton( onClick = {navigateToSearch()})
 
         Spacer(20.dp)
 
@@ -147,28 +99,38 @@ fun TrendingBooksScreen(
                             state = state,
                             lazyGridState = lazyGridState,
                             onBookClick = { bookItem ->
-                                sharedBookViewModel.handleAction(
-                                    action = SharedBookAction.ChooseBook(bookItem)
-                                )
+                                bookDetailsViewModel.dispatch(BookDetailsAction.ChooseBook(bookItem))
                                 navigateToDetails()
                             }
                         )
                     }
 
                     ErrorStatus.NETWORK_ERROR -> {
-                        ErrorScreen(stringResource(R.string.error_network))
+                        ErrorScreen(stringResource(R.string.error_network),
+                            isTryButtonAdded = true,
+                            onClick = {viewModel.dispatch(trendingBooksAction = TrendingBooksAction.FetchTrendingBooks)}
+                        )
                     }
 
                     ErrorStatus.SERVER_ERROR -> {
-                        ErrorScreen(stringResource(R.string.error_server))
+                        ErrorScreen(stringResource(R.string.error_server),
+                            isTryButtonAdded = true,
+                            onClick = {viewModel.dispatch(trendingBooksAction = TrendingBooksAction.FetchTrendingBooks)}
+                        )
                     }
 
-                    ErrorStatus.NO_BOOKS_ERROR -> {
-                        ErrorScreen(stringResource(R.string.nothing_found))
+                    ErrorStatus.NOTHING_FOUND -> {
+                        ErrorScreen(stringResource(R.string.nothing_found),
+                            isTryButtonAdded = true,
+                            onClick = {viewModel.dispatch(trendingBooksAction = TrendingBooksAction.FetchTrendingBooks)}
+                        )
                     }
 
                     ErrorStatus.UNKNOWN_ERROR -> {
-                        ErrorScreen(stringResource(R.string.error_unknown))
+                        ErrorScreen(stringResource(R.string.error_unknown),
+                            isTryButtonAdded = true,
+                            onClick = {viewModel.dispatch(trendingBooksAction = TrendingBooksAction.FetchTrendingBooks)}
+                        )
                     }
                 }
             }

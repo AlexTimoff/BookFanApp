@@ -55,7 +55,6 @@ fun BookStarRating(rating: Double, maxRating: Int = 5) {
                     contentDescription = "$starType Star",
                     contentScale = ContentScale.Fit,
                     modifier = Modifier.fillMaxSize()
-
                 )
             }
         }

@@ -7,6 +7,7 @@
     <string name="error_server">Server error: Please try again later.</string>
     <string name="error_unknown">Unknown error</string>
     <string name="error_no_books">Nothing found for your request</string>
+    <string name="error_no_description">The book description was not found.</string>
     <string name="book_rating">Book ratings</string>
     <string name="about_book">About book</string>
     <string name="average_rating">average \n rating</string>
@@ -19,7 +20,7 @@
     <string name="number_already_read">%1$d already read</string>
     <string name="stars">%1$d ★</string>
     <string name="languages">Languages</string>
-    <string name="no_description">no description</string>
+    <string name="description">description</string>
     <string name="my_books">My books</string>
     <string name="popular">Popular</string>
     <string name="database_error">Something went wrong</string>
@@ -28,4 +29,5 @@
     <string name="your_request">Your books will be here</string>
     <string name="loading">Loading, please wait...</string>
     <string name="nothing_found">Nothing found</string>
+    <string name="try_again">Try Again</string>
 </resources>

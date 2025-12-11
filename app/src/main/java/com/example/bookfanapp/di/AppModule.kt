@@ -2,15 +2,15 @@ package com.example.bookfanapp.di
 
 
 import androidx.room.Room
-import com.example.bookfanapp.data.myLibraryDatabase.dao.BookDao
-import com.example.bookfanapp.data.myLibraryDatabase.database.MyLibraryDatabase
-import com.example.bookfanapp.data.apiOpenLibrary.network.mapper.DtoToBookDetailsMapper
-import com.example.bookfanapp.data.apiOpenLibrary.network.mapper.DtoToBookItemMapper
-import com.example.bookfanapp.data.apiOpenLibrary.network.mapper.DtoToBookListMapper
-import com.example.bookfanapp.data.myLibraryDatabase.mappers.FromBookEntityDtoToBookItemMapper
-import com.example.bookfanapp.data.myLibraryDatabase.mappers.ToBookEntityDtoMapper
+import com.example.bookfanapp.data.my_library_database.dao.BookDao
+import com.example.bookfanapp.data.my_library_database.database.MyLibraryDatabase
+import com.example.bookfanapp.data.api_open_library.network.mapper.DtoToBookDetailsMapper
+import com.example.bookfanapp.data.api_open_library.network.mapper.DtoToBookItemMapper
+import com.example.bookfanapp.data.api_open_library.network.mapper.DtoToBookListMapper
+import com.example.bookfanapp.data.my_library_database.mappers.FromBookEntityDtoToBookItemMapper
+import com.example.bookfanapp.data.my_library_database.mappers.ToBookEntityDtoMapper
 import com.example.bookfanapp.domain.useCases.api.BookDetailsUseCase
-import com.example.bookfanapp.domain.useCases.api.BooksListUseCase
+import com.example.bookfanapp.domain.useCases.api.SearchBooksUseCase
 import com.example.bookfanapp.domain.useCases.api.TrendingBooksListUseCase
 import com.example.bookfanapp.domain.useCases.database.AddFavouriteBookUseCase
 import com.example.bookfanapp.domain.useCases.database.CheckFavouriteStatusUseCase
@@ -32,7 +32,7 @@ val appModule = module {
     single<BookDao> { get<MyLibraryDatabase>().bookDao() }
 
     //UseCases
-    single { BooksListUseCase(get()) }
+    single { SearchBooksUseCase(get()) }
     single { TrendingBooksListUseCase(get()) }
     single { BookDetailsUseCase(get()) }
     single { AddFavouriteBookUseCase(get()) }

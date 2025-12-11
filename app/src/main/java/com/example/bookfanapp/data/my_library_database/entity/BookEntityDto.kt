@@ -1,4 +1,4 @@
-package com.example.bookfanapp.data.myLibraryDatabase.entity
+package com.example.bookfanapp.data.my_library_database.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity

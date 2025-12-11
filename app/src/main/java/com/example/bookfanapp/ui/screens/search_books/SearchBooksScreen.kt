@@ -9,8 +9,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
@@ -25,29 +23,28 @@ import com.example.bookfanapp.domain.errors.ErrorStatus
 import com.example.bookfanapp.ui.components.BookItemScreen
 import com.example.bookfanapp.ui.view_models.search_books.SearchBooksAction
 import com.example.bookfanapp.ui.view_models.search_books.SearchBooksViewModel
-import com.example.bookfanapp.ui.view_models.shared.SharedBookAction
-import com.example.bookfanapp.ui.view_models.shared.SharedBookViewModel
 import com.example.bookfanapp.ui.components.BookSearchField
 import com.example.bookfanapp.ui.components.ErrorScreen
 import com.example.bookfanapp.ui.components.InitialSearchScreen
 import com.example.bookfanapp.ui.components.LoadingScreen
 import com.example.bookfanapp.ui.components.Spacer
+import com.example.bookfanapp.ui.view_models.book_details.BookDetailsAction
+import com.example.bookfanapp.ui.view_models.book_details.BookDetailsViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
-import org.koin.androidx.compose.koinViewModel
 
 
 @Composable
 fun SearchBooksScreen(
-    viewModel: SearchBooksViewModel = koinViewModel(),
-    sharedBookViewModel: SharedBookViewModel = koinViewModel(),
+    viewModel: SearchBooksViewModel,
+    bookDetailsViewModel: BookDetailsViewModel,
     navigateToDetails: () -> Unit
 ) {
-    val state by viewModel.searchBooksState.collectAsState()
+    val state by viewModel::searchBooksState
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
         if (state.bookList.isNullOrEmpty()) {
-            viewModel.handleAction(SearchBooksAction.Initial)
+            viewModel.dispatch(searchBooksAction = SearchBooksAction.Initial)
         }
         focusRequester.requestFocus()
     }
@@ -63,17 +60,17 @@ fun SearchBooksScreen(
         BookSearchField(
             value = state.bookQuery,
             onValueChange = { bookQuery ->
-                viewModel.handleAction(SearchBooksAction.UpdateBookQuery(bookQuery))
+                viewModel.dispatch(SearchBooksAction.UpdateBookQuery(bookQuery))
             },
             onSearch = {
-                viewModel.handleAction(SearchBooksAction.LoadBookList(state.bookQuery, true))
+                viewModel.dispatch(SearchBooksAction.FetchBooks(state.bookQuery))
             },
             placeholder = stringResource(R.string.search_input),
             modifier = Modifier
                 .onFocusChanged { }
                 .focusRequester(focusRequester),
             onReset = {
-                viewModel.handleAction(SearchBooksAction.ResetQuery)
+                viewModel.dispatch(SearchBooksAction.ResetQuery)
             }
         )
 
@@ -93,30 +90,44 @@ fun SearchBooksScreen(
                     ErrorStatus.NO_ERROR -> {
                         BookListContent(
                             state = state,
-                            viewModel=viewModel,
+                            viewModel = viewModel,
                             onBookClick = { bookItem ->
-                                sharedBookViewModel.handleAction(
-                                    action = SharedBookAction.ChooseBook(bookItem)
-                                )
+                                bookDetailsViewModel.dispatch(BookDetailsAction.ChooseBook(bookItem))
                                 navigateToDetails()
                             }
                         )
                     }
 
                     ErrorStatus.NETWORK_ERROR -> {
-                        ErrorScreen(stringResource(R.string.error_network))
+                        ErrorScreen(
+                            stringResource(R.string.error_network),
+                            isTryButtonAdded = false,
+                            onClick = {}
+                        )
                     }
 
                     ErrorStatus.SERVER_ERROR -> {
-                        ErrorScreen(stringResource(R.string.error_server))
+                        ErrorScreen(
+                            stringResource(R.string.error_server),
+                            isTryButtonAdded = false,
+                            onClick = {}
+                        )
                     }
 
-                    ErrorStatus.NO_BOOKS_ERROR -> {
-                        ErrorScreen(stringResource(R.string.error_no_books))
+                    ErrorStatus.NOTHING_FOUND -> {
+                        ErrorScreen(
+                            stringResource(R.string.error_no_books),
+                            isTryButtonAdded = false,
+                            onClick = {}
+                        )
                     }
 
                     ErrorStatus.UNKNOWN_ERROR -> {
-                        ErrorScreen(stringResource(R.string.error_unknown))
+                        ErrorScreen(
+                            stringResource(R.string.error_unknown),
+                            isTryButtonAdded = false,
+                            onClick = {}
+                        )
                     }
                 }
             }
@@ -138,14 +149,10 @@ private fun BookListContent(
                     .distinctUntilChanged()
                     .collect { lastVisibleItemIndex ->
                         val totalItems = state.bookList.size
-                        val shouldLoadMore = lastVisibleItemIndex == totalItems - 1 && !state.isLoadingPage
+                        val shouldLoadMore =
+                            lastVisibleItemIndex == totalItems - 1 && !state.isLoadingPage
                         if (shouldLoadMore) {
-                            viewModel.handleAction(
-                                SearchBooksAction.LoadBookList(
-                                    name = state.bookQuery,
-                                    isFirstLoad = false
-                                )
-                            )
+                            viewModel.dispatch(SearchBooksAction.FetchMoreBooks(state.bookQuery))
                         }
                     }
             }

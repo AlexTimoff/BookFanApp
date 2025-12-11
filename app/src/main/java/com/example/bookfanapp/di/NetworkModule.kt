@@ -1,6 +1,6 @@
 package com.example.bookfanapp.di
 
-import com.example.bookfanapp.data.apiOpenLibrary.network.BookApiService
+import com.example.bookfanapp.data.api_open_library.network.BookApiService
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.DefaultRequest

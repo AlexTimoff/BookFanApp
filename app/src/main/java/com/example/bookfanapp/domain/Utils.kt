@@ -1,6 +1,6 @@
 package com.example.bookfanapp.domain
 
-import com.example.bookfanapp.data.apiOpenLibrary.network.entities.BookDetailsDto
+import com.example.bookfanapp.data.api_open_library.network.entities.BookDetailsDto
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonPrimitive

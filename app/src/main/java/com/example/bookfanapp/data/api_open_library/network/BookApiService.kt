@@ -1,6 +1,5 @@
-package com.example.bookfanapp.data.apiOpenLibrary.network
+package com.example.bookfanapp.data.api_open_library.network
 
-import android.util.Log
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
@@ -30,7 +29,7 @@ class BookApiService(
         return request
     }
 
-    suspend fun getSubjectBooks(query: String, offset: Int, limit: Int): HttpResponse {
+    suspend fun getTrendingBooks(query: String, offset: Int, limit: Int): HttpResponse {
         val url = "$BASE_URL/search.json"
         val request = httpClient.get(
             url

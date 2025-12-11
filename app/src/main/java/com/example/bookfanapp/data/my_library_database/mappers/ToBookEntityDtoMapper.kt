@@ -1,23 +1,23 @@
-package com.example.bookfanapp.data.apiOpenLibrary.network.mapper
+package com.example.bookfanapp.data.my_library_database.mappers
 
-import com.example.bookfanapp.data.apiOpenLibrary.network.entities.BookItemDto
+import com.example.bookfanapp.data.my_library_database.entity.BookEntityDto
 import com.example.bookfanapp.domain.entities.BookItem
 
-class DtoToBookItemMapper {
-    operator fun invoke(bookItemDto: BookItemDto): BookItem {
-        return with(bookItemDto){
-            BookItem(
+class ToBookEntityDtoMapper {
+    operator fun invoke(bookItem: BookItem): BookEntityDto {
+        return with(bookItem){
+            BookEntityDto(
                 keyBook=keyBook,
-                authorKeys=authorKey?: emptyList(),
-                authorNames = authorName?: emptyList(),
-                bookImageKey = coverEditionKey,
-                editionCount = editionCount?:0,
+                authorKeys=authorKeys,
+                authorNames = authorNames,
+                bookImageKey = bookImageKey,
+                editionCount = editionCount,
                 firstPublishYear=firstPublishYear,
-                languages=languages?: emptyList(),
+                languages=languages,
                 numberPages=numberPages,
                 title=title,
-                bookDescription = null,
-                persons=persons?: emptyList(),
+                bookDescription = bookDescription,
+                persons=persons,
                 bookRating=bookRating,
                 ratingsCount=ratingsCount,
                 ratingScoreOne=ratingScoreOne,

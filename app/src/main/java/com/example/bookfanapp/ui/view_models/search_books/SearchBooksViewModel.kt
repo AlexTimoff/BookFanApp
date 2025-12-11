@@ -1,143 +1,171 @@
 package com.example.bookfanapp.ui.view_models.search_books
 
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.bookfanapp.domain.entities.BookResponse
 import com.example.bookfanapp.domain.errors.ErrorStatus
-import com.example.bookfanapp.domain.errors.FetchBooksError
-import com.example.bookfanapp.domain.useCases.api.BooksListUseCase
+import com.example.bookfanapp.domain.useCases.api.SearchBooksUseCase
 import com.example.bookfanapp.ui.screens.search_books.SearchBooksState
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 
 class SearchBooksViewModel(
     private val ioDispatcher: CoroutineDispatcher,
-    private val booksListUseCase: BooksListUseCase,
+    private val searchBooksUseCase: SearchBooksUseCase,
 ) : ViewModel() {
 
-    private val _searchBooksState = MutableStateFlow(SearchBooksState())
-    val searchBooksState: StateFlow<SearchBooksState> = _searchBooksState
+    private val bufferSize = 64
+    private val actions = MutableSharedFlow<SearchBooksAction>(extraBufferCapacity = bufferSize)
+    var searchBooksState by mutableStateOf(SearchBooksState())
+        private set
 
-    fun handleAction(action: SearchBooksAction) {
-        when (action) {
-            is SearchBooksAction.Initial -> isInitial()
-            is SearchBooksAction.LoadBookList -> loadBooksList(action.name, action.isFirstLoad)
-            is SearchBooksAction.UpdateBookQuery -> updateBookQuery(action.bookQuery)
-            is SearchBooksAction.ResetQuery -> resetQuery()
+    init {
+        store()
+    }
+
+    private fun store() {
+        viewModelScope.launch {
+            actions.collect { searchBooksAction ->
+                when (searchBooksAction) {
+                    is SearchBooksAction.Initial -> {
+                        searchBooksState = reduce(searchBooksState, searchBooksAction)
+                    }
+
+                    is SearchBooksAction.UpdateBookQuery -> {
+                        searchBooksState = reduce(searchBooksState, searchBooksAction)
+                    }
+
+                    is SearchBooksAction.FetchBooks -> {
+                        launch {
+                            fetchBooks(
+                                bookQuery = searchBooksAction.query,
+                                isInitialLoad = true,
+                                searchBooksAction = searchBooksAction
+                            )
+                        }
+                    }
+
+                    is SearchBooksAction.FetchMoreBooks -> {
+                        launch {
+                            fetchBooks(
+                                bookQuery = searchBooksAction.query,
+                                isInitialLoad = false,
+                                searchBooksAction = searchBooksAction
+                            )
+                        }
+                    }
+
+                    is SearchBooksAction.LoadSuccess -> {
+                        searchBooksState = reduce(searchBooksState, searchBooksAction)
+                        Log.d(
+                            "SearchBooksViewModel",
+                            "Booklist_size ${searchBooksState.bookList?.size}, booklist ${searchBooksState.bookList}"
+                        )
+                    }
+
+                    is SearchBooksAction.LoadError -> {
+                        searchBooksState = reduce(searchBooksState, searchBooksAction)
+                    }
+
+                    is SearchBooksAction.ResetQuery -> {
+                        searchBooksState = reduce(searchBooksState, searchBooksAction)
+                    }
+                }
+            }
         }
     }
 
-    private fun isInitial(){
-        _searchBooksState.value = _searchBooksState.value.copy(
-            isInitialScreen = true,
-        )
-    }
+    private fun reduce(
+        searchBooksState: SearchBooksState,
+        searchBooksAction: SearchBooksAction
+    ): SearchBooksState {
+        return when (searchBooksAction) {
+            is SearchBooksAction.Initial -> searchBooksState.copy(
+                isInitialScreen = true
+            )
 
+            is SearchBooksAction.UpdateBookQuery -> searchBooksState.copy(
+                bookQuery = searchBooksAction.bookQuery
+            )
 
-    private fun updateBookQuery(bookQuery: String) {
-        _searchBooksState.value = _searchBooksState.value.copy(
-            bookQuery = bookQuery,
-        )
-    }
-
-    private fun loadBooksList(
-        query: String,
-        isFirstLoad: Boolean = false
-    ) {
-        _searchBooksState.value = _searchBooksState.value.copy(
-            isInitialScreen = false
-        )
-        val limit = 10
-        val offset = if (isFirstLoad) 0 else _searchBooksState.value.currentPosition + limit
-
-        if (!isFirstLoad && _searchBooksState.value.isLoadingPage) return
-        if (isFirstLoad) {
-            _searchBooksState.value = _searchBooksState.value.copy(
+            is SearchBooksAction.FetchBooks -> searchBooksState.copy(
+                isInitialScreen = false,
+                isLoadingPage = true,
                 bookList = emptyList(),
                 currentPosition = 0,
                 errorStatus = ErrorStatus.NO_ERROR,
-                isLoadingPage = true
             )
-        } else {
-            _searchBooksState.value = _searchBooksState.value.copy(
+
+            is SearchBooksAction.FetchMoreBooks -> searchBooksState.copy(
+                isInitialScreen = false,
                 isLoadingPage = false
             )
-        }
 
-        viewModelScope.launch(ioDispatcher) {
-            val result = booksListUseCase(query, offset, limit)
-            result.onSuccess {
-                loadBooks(result.getOrNull(), isFirstLoad, offset)
-            }
-            result.onFailure { error ->
-                val errorMessage = when (error) {
-                    is FetchBooksError.NetworkError -> ErrorStatus.NETWORK_ERROR
-                    is FetchBooksError.ServerError -> ErrorStatus.SERVER_ERROR
-                    is FetchBooksError.UnknownError -> ErrorStatus.UNKNOWN_ERROR
-                    else -> ErrorStatus.UNKNOWN_ERROR
-                }
-                _searchBooksState.value = _searchBooksState.value.copy(
+
+            is SearchBooksAction.LoadSuccess -> {
+                val currentList = searchBooksState.bookList ?: emptyList()
+                val newList = currentList + searchBooksAction.bookResponse.docs!!
+                Log.d("SearchBooksViewModel", "offset ${searchBooksAction.offset.toString()}")
+                searchBooksState.copy(
+                    isInitialScreen = false,
                     isLoadingPage = false,
-                    errorStatus = errorMessage
+                    errorStatus = ErrorStatus.NO_ERROR,
+                    bookList = newList,
+                    currentPosition = searchBooksAction.offset,
                 )
             }
-        }
-    }
 
-    private fun loadBooks(bookResponse: BookResponse?, isInitialLoad: Boolean, offset: Int) {
-        Log.d("BookListViewModel", "On the position number $offset : ${bookResponse?.docs?.size}")
-        if (bookResponse != null) {
-            if (!bookResponse.docs.isNullOrEmpty()) {
-                val newBookList = if (isInitialLoad) {
-                    bookResponse.docs
+            is SearchBooksAction.LoadError -> {
+                if (!searchBooksState.bookList.isNullOrEmpty() && searchBooksAction.errorStatus == ErrorStatus.NOTHING_FOUND) {
+                    searchBooksState.copy(
+                        isLoadingPage = false,
+                        errorStatus = ErrorStatus.NO_ERROR
+                    )
                 } else {
-                    _searchBooksState.value.bookList?.plus(bookResponse.docs)
-                        ?: bookResponse.docs
-                }
-                Log.d("BookListViewModel", "download $newBookList")
-                _searchBooksState.value = _searchBooksState.value.copy(
-                    bookResponse = bookResponse,
-                    errorStatus = ErrorStatus.NO_ERROR,
-                    bookList = newBookList,
-                    currentPosition = offset,
-                    isLoadingPage = false
-                )
-            } else {
-                if (isInitialLoad) {
-                    _searchBooksState.value = _searchBooksState.value.copy(
-                        errorStatus = ErrorStatus.NO_BOOKS_ERROR,
+                    searchBooksState.copy(
+                        isLoadingPage = false,
+                        errorStatus = searchBooksAction.errorStatus
                     )
                 }
-                _searchBooksState.value = _searchBooksState.value.copy(
-                    isLoadingPage = false
+            }
+
+            is SearchBooksAction.ResetQuery -> {
+                searchBooksState.copy(
+                    bookQuery = "",
+                    errorStatus = ErrorStatus.NO_ERROR,
+                    bookList = emptyList(),
+                    currentPosition = 0,
+                    isLoadingPage = false,
+                    isInitialScreen = true
                 )
             }
-        } else {
-            if (isInitialLoad) {
-                _searchBooksState.value = _searchBooksState.value.copy(
-                    errorStatus = ErrorStatus.NO_BOOKS_ERROR,
-                )
-            }
-            _searchBooksState.value = _searchBooksState.value.copy(
-                isLoadingPage = false
-            )
         }
-        Log.d("BookList", "ErroStatus ${_searchBooksState.value.errorStatus}")
     }
 
-    private fun resetQuery() {
-        _searchBooksState.value = _searchBooksState.value.copy(
-            bookQuery = "",
-            errorStatus = ErrorStatus.NO_ERROR,
-            bookResponse = null,
-            bookList = emptyList(),
-            currentPosition = 0,
-            isLoadingPage = false,
-            isInitialScreen = true
-        )
+    fun dispatch(searchBooksAction: SearchBooksAction) {
+        if (!actions.tryEmit(searchBooksAction)) {
+            error("Action buffer full!")
+        }
+    }
+
+    private fun fetchBooks(
+        bookQuery: String,
+        isInitialLoad: Boolean,
+        searchBooksAction: SearchBooksAction
+    ) {
+        searchBooksState = reduce(searchBooksState, searchBooksAction)
+        val limit = 12
+        val offset = if (isInitialLoad) 0 else searchBooksState.currentPosition + limit
+        if (!isInitialLoad && searchBooksState.isLoadingPage) return
+        viewModelScope.launch(ioDispatcher) {
+            val result = searchBooksUseCase(bookQuery, offset, limit)
+            dispatch(searchBooksAction = result)
+            Log.d("SearchBooksViewModel", "ErrorStatus ${result.toString()}")
+        }
     }
 }
 

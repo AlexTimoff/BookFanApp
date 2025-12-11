@@ -14,7 +14,6 @@ import com.example.bookfanapp.ui.screens.my_books.MyBooksScreen
 import com.example.bookfanapp.ui.view_models.my_books.MyBooksViewModel
 import com.example.bookfanapp.ui.view_models.search_books.SearchBooksViewModel
 import com.example.bookfanapp.ui.screens.search_books.SearchBooksScreen
-import com.example.bookfanapp.ui.view_models.shared.SharedBookViewModel
 import com.example.bookfanapp.ui.screens.trending_books.TrendingBooksScreen
 import com.example.bookfanapp.ui.view_models.trending_books.TrendingBooksViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -22,7 +21,7 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun AppNavigation(navController: NavHostController, modifier: Modifier = Modifier) {
-    val sharedBookViewModel: SharedBookViewModel = koinViewModel()
+    val bookDetailsViewModel: BookDetailsViewModel = koinViewModel()
 
     NavHost(
         navController = navController,
@@ -45,7 +44,7 @@ fun AppNavigation(navController: NavHostController, modifier: Modifier = Modifie
             val trendingBooksViewModel: TrendingBooksViewModel = koinViewModel()
             TrendingBooksScreen(
                 viewModel = trendingBooksViewModel,
-                sharedBookViewModel = sharedBookViewModel,
+                bookDetailsViewModel = bookDetailsViewModel,
                 navigateToDetails = {navController.navigate(route = Route.BOOK_DETAILS_SCREEN.name)},
                 navigateToSearch = {navController.navigate(route=Route.SEARCH_BOOKS_SCREEN.name)}
                 )
@@ -69,7 +68,7 @@ fun AppNavigation(navController: NavHostController, modifier: Modifier = Modifie
 
             SearchBooksScreen(
                 viewModel = searchBooksViewModel,
-                sharedBookViewModel = sharedBookViewModel,
+                bookDetailsViewModel = bookDetailsViewModel,
                 navigateToDetails ={navController.navigate(route = Route.BOOK_DETAILS_SCREEN.name)}
             )
         }
@@ -77,16 +76,14 @@ fun AppNavigation(navController: NavHostController, modifier: Modifier = Modifie
             val myBooksViewModel: MyBooksViewModel = koinViewModel()
             MyBooksScreen(
                 viewModel =  myBooksViewModel,
-                sharedBookViewModel=sharedBookViewModel,
+                bookDetailsViewModel=bookDetailsViewModel,
                 navigateToDetails = {navController.navigate(route = Route.BOOK_DETAILS_SCREEN.name)}
                 )
         }
 
         composable(Route.BOOK_DETAILS_SCREEN.name) {
-            val bookDetailsViewModel: BookDetailsViewModel = koinViewModel()
             BookDetailsScreen(
                 viewModel = bookDetailsViewModel,
-                sharedBookViewModel=sharedBookViewModel,
                 navigateOnBack = {navController.popBackStack()})
         }
     }

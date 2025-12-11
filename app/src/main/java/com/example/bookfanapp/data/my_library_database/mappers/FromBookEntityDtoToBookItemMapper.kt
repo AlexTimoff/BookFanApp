@@ -1,6 +1,6 @@
-package com.example.bookfanapp.data.myLibraryDatabase.mappers
+package com.example.bookfanapp.data.my_library_database.mappers
 
-import com.example.bookfanapp.data.myLibraryDatabase.entity.BookEntityDto
+import com.example.bookfanapp.data.my_library_database.entity.BookEntityDto
 import com.example.bookfanapp.domain.entities.BookItem
 
 class FromBookEntityDtoToBookItemMapper {

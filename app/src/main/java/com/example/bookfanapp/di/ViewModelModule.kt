@@ -3,7 +3,6 @@ package com.example.bookfanapp.di
 import com.example.bookfanapp.ui.view_models.book_details.BookDetailsViewModel
 import com.example.bookfanapp.ui.view_models.my_books.MyBooksViewModel
 import com.example.bookfanapp.ui.view_models.search_books.SearchBooksViewModel
-import com.example.bookfanapp.ui.view_models.shared.SharedBookViewModel
 import com.example.bookfanapp.ui.view_models.trending_books.TrendingBooksViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
@@ -25,7 +24,6 @@ object ViewModelModule {
                 get(),
                 get(),
                 get(),
-                get(),
             )
         }
         viewModel {
@@ -36,9 +34,7 @@ object ViewModelModule {
                 get(),
             )
         }
-        viewModel {
-            SharedBookViewModel()
-        }
+
         viewModel {
            TrendingBooksViewModel(
                 get(named("IoDispatcher")),

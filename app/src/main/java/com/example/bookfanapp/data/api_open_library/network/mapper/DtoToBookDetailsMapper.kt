@@ -1,6 +1,6 @@
-package com.example.bookfanapp.data.apiOpenLibrary.network.mapper
+package com.example.bookfanapp.data.api_open_library.network.mapper
 
-import com.example.bookfanapp.data.apiOpenLibrary.network.entities.BookDetailsDto
+import com.example.bookfanapp.data.api_open_library.network.entities.BookDetailsDto
 import com.example.bookfanapp.domain.entities.BookDetails
 import com.example.bookfanapp.domain.getDescriptionText
 

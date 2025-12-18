@@ -8,11 +8,10 @@
 
 **Визуализация приложения**: 
 
-![1](https://github.com/user-attachments/assets/a19efd4d-f75d-4f9e-a79e-32aeede384ec)
-![2](https://github.com/user-attachments/assets/019d5458-e58b-4f23-8d9c-73527efa6a29)
-![3](https://github.com/user-attachments/assets/1d9fec59-9931-47f1-8ca5-785d53677aa5)
-![4](https://github.com/user-attachments/assets/96fcd5ad-9f61-42b6-b6c8-c222d6b7663c)
-![5](https://github.com/user-attachments/assets/148e2d14-494a-46b3-900e-5266d3a48858)
+| ![1](https://github.com/user-attachments/assets/a19efd4d-f75d-4f9e-a79e-32aeede384ec) | ![2](https://github.com/user-attachments/assets/019d5458-e58b-4f23-8d9c-73527efa6a29) | ![3](https://github.com/user-attachments/assets/1d9fec59-9931-47f1-8ca5-785d53677aa5) |
+|---------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------|
+| ![4](https://github.com/user-attachments/assets/96fcd5ad-9f61-42b6-b6c8-c222d6b7663c) | ![5](https://github.com/user-attachments/assets/148e2d14-494a-46b3-900e-5266d3a48858) | ![6](https://github.com/user-attachments/assets/6514e60a-0a10-474c-a8a8-ab31d2c9d396) |
+
 
 
 **Используемый стек**: 

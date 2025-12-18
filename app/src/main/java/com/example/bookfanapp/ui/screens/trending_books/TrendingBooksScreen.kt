@@ -19,6 +19,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
 import com.example.bookfanapp.domain.entities.BookItem
 import com.example.bookfanapp.domain.errors.ErrorStatus
@@ -42,7 +44,7 @@ fun TrendingBooksScreen(
     navigateToDetails: () -> Unit,
     navigateToSearch: () -> Unit
 ) {
-    val state by viewModel::trendingBooksState
+    val state by viewModel.trendingBooksState.collectAsState()
     val lazyGridState = rememberLazyGridState()
 
     LaunchedEffect(Unit) {

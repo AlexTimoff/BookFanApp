@@ -1,9 +1,6 @@
 package com.example.bookfanapp.ui.view_models.my_books
 
-import com.example.bookfanapp.domain.entities.BookDetails
 import com.example.bookfanapp.domain.entities.BookItem
-import com.example.bookfanapp.domain.errors.ErrorStatus
-import com.example.bookfanapp.ui.view_models.book_details.BookDetailsAction
 
 sealed class MyBooksAction {
     data object ShowMyBooks : MyBooksAction()

@@ -1,8 +1,5 @@
 package com.example.bookfanapp.ui.view_models.my_books
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bookfanapp.domain.useCases.database.CheckFavouriteStatusUseCase
@@ -11,6 +8,10 @@ import com.example.bookfanapp.domain.useCases.database.GetFavouritesUseCase
 import com.example.bookfanapp.ui.screens.my_books.MyBooksState
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class MyBooksViewModel(
@@ -22,8 +23,9 @@ class MyBooksViewModel(
 
     private val bufferSize = 64
     private val actions = MutableSharedFlow<MyBooksAction>(extraBufferCapacity = bufferSize)
-    var myBooksState by mutableStateOf(MyBooksState())
-        private set
+
+    private val _myBooksState = MutableStateFlow(MyBooksState())
+    val myBooksState: StateFlow<MyBooksState> = _myBooksState.asStateFlow()
 
     init {
         store()
@@ -34,17 +36,17 @@ class MyBooksViewModel(
             actions.collect { myBooksAction ->
                 when (myBooksAction) {
                     is MyBooksAction.ShowMyBooks -> {
-                        launch{
+                        launch {
                             showMyBooks(myBooksAction)
                         }
                     }
 
                     is MyBooksAction.LoadMyBooks -> {
-                        myBooksState=reduce(myBooksState,myBooksAction)
+                        reduce(myBooksAction)
                     }
 
                     is MyBooksAction.LoadError -> {
-                        myBooksState=reduce(myBooksState,myBooksAction)
+                        reduce(myBooksAction)
                     }
 
                     is MyBooksAction.DeleteMyBook -> {
@@ -53,55 +55,63 @@ class MyBooksViewModel(
                         }
                     }
 
-                    is MyBooksAction.SuccessDeleted ->{
-                        myBooksState=reduce(myBooksState,myBooksAction)
+                    is MyBooksAction.SuccessDeleted -> {
+                        reduce(myBooksAction)
                         launch {
                             showMyBooks(myBooksAction)
                         }
                     }
 
-                    is MyBooksAction.LoadErrorDeleted->{
-                        myBooksState=reduce(myBooksState,myBooksAction)
+                    is MyBooksAction.LoadErrorDeleted -> {
+                        reduce(myBooksAction)
                     }
-
                 }
             }
         }
     }
 
     private fun reduce(
-        myBooksState: MyBooksState,
         myBooksAction: MyBooksAction
-    ): MyBooksState {
-        return when (myBooksAction) {
+    ) {
+        when (myBooksAction) {
+            is MyBooksAction.ShowMyBooks -> _myBooksState.update {
+                it.copy(
+                    isLoading = true
+                )
+            }
 
-            is MyBooksAction.ShowMyBooks -> myBooksState.copy(
-                isLoading = true
-            )
+            is MyBooksAction.LoadMyBooks -> _myBooksState.update {
+                it.copy(
+                    isLoading = false,
+                    myBookList = myBooksAction.myBooks,
+                    myBooksError = null
+                )
+            }
 
-            is MyBooksAction.LoadMyBooks -> myBooksState.copy(
-                isLoading = false,
-                myBookList = myBooksAction.myBooks,
-                myBooksError = null
-            )
+            is MyBooksAction.LoadError -> _myBooksState.update {
+                it.copy(
+                    isLoading = false,
+                    myBooksError = myBooksAction.error
+                )
+            }
 
-            is MyBooksAction.LoadError -> myBooksState.copy(
-                isLoading = false,
-                myBooksError=myBooksAction.error
-            )
+            is MyBooksAction.DeleteMyBook -> _myBooksState.update {
+                it.copy(
+                    deleteError = null
+                )
+            }
 
-            is MyBooksAction.DeleteMyBook -> myBooksState.copy(
-                deleteError = null
-            )
+            is MyBooksAction.SuccessDeleted -> _myBooksState.update {
+                it.copy(
+                    deleteError = null
+                )
+            }
 
-            is MyBooksAction.SuccessDeleted -> myBooksState.copy(
-                deleteError = null
-            )
-
-            is MyBooksAction.LoadErrorDeleted -> myBooksState.copy(
-                deleteError = myBooksAction.error
-            )
-
+            is MyBooksAction.LoadErrorDeleted -> _myBooksState.update {
+                it.copy(
+                    deleteError = myBooksAction.error
+                )
+            }
         }
     }
 
@@ -114,20 +124,20 @@ class MyBooksViewModel(
 
     private fun showMyBooks(
         myBooksAction: MyBooksAction
-    ){
-        myBooksState=reduce(myBooksState,myBooksAction)
+    ) {
+        reduce(myBooksAction)
         viewModelScope.launch(ioDispatcher) {
-                val result = getFavouritesUseCase()
-                dispatch(myBooksAction = result)
+            val result = getFavouritesUseCase()
+            dispatch(myBooksAction = result)
         }
     }
 
     private fun deleteMyBook(
-        keyBook:String,
+        keyBook: String,
         myBooksAction: MyBooksAction
-    ){
+    ) {
         viewModelScope.launch(ioDispatcher) {
-            myBooksState = reduce(myBooksState, myBooksAction)
+            reduce(myBooksAction)
             viewModelScope.launch(ioDispatcher) {
                 val result = deleteFavouriteBookUseCase(
                     keyBook,

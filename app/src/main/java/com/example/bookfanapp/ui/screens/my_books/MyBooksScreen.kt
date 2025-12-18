@@ -10,6 +10,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -32,7 +34,7 @@ fun MyBooksScreen(
     bookDetailsViewModel: BookDetailsViewModel,
     navigateToDetails: () -> Unit
 ) {
-    val state by viewModel::myBooksState
+    val state by viewModel.myBooksState.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.dispatch(MyBooksAction.ShowMyBooks)

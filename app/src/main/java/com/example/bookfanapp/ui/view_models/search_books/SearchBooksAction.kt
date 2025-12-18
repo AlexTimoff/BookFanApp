@@ -2,7 +2,6 @@ package com.example.bookfanapp.ui.view_models.search_books
 
 import com.example.bookfanapp.domain.entities.BookResponse
 import com.example.bookfanapp.domain.errors.ErrorStatus
-import com.example.bookfanapp.ui.view_models.trending_books.TrendingBooksAction
 
 sealed class SearchBooksAction {
     data object Initial : SearchBooksAction()

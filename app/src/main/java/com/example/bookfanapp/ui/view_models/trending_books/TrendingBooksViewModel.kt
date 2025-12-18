@@ -1,9 +1,6 @@
 package com.example.bookfanapp.ui.view_models.trending_books
 
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bookfanapp.domain.errors.ErrorStatus
@@ -11,6 +8,10 @@ import com.example.bookfanapp.domain.useCases.api.TrendingBooksListUseCase
 import com.example.bookfanapp.ui.screens.trending_books.TrendingBooksState
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 const val TRENDING_BOOKS =
@@ -23,8 +24,9 @@ class TrendingBooksViewModel(
 
     private val bufferSize = 64
     private val actions = MutableSharedFlow<TrendingBooksAction>(extraBufferCapacity = bufferSize)
-    var trendingBooksState by mutableStateOf(TrendingBooksState())
-        private set
+
+    private val _trendingBooksState = MutableStateFlow(TrendingBooksState())
+    val trendingBooksState: StateFlow<TrendingBooksState> = _trendingBooksState.asStateFlow()
 
     init {
         store()
@@ -35,8 +37,8 @@ class TrendingBooksViewModel(
             actions.collect { trendingBooksAction ->
                 when (trendingBooksAction) {
                     is TrendingBooksAction.FetchTrendingBooks -> {
-                        launch{
-                            fetchBooks( isInitialLoad = true, trendingBooksAction)
+                        launch {
+                            fetchBooks(isInitialLoad = true, trendingBooksAction)
                         }
                     }
 
@@ -47,12 +49,15 @@ class TrendingBooksViewModel(
                     }
 
                     is TrendingBooksAction.LoadSuccess -> {
-                        trendingBooksState = reduce(trendingBooksState, trendingBooksAction)
-                        Log.d("TrendingBooksViewModel", "booklist size ${trendingBooksState.bookList?.size}, booklist $trendingBooksState")
+                        reduce(trendingBooksAction)
+                        Log.d(
+                            "TrendingBooksViewModel",
+                            "booklist size ${_trendingBooksState.value.bookList?.size}, booklist ${_trendingBooksState.value.bookList}"
+                        )
                     }
 
                     is TrendingBooksAction.LoadError -> {
-                        trendingBooksState = reduce(trendingBooksState, trendingBooksAction)
+                        reduce(trendingBooksAction)
                     }
                 }
             }
@@ -60,46 +65,53 @@ class TrendingBooksViewModel(
     }
 
     private fun reduce(
-        trendingBooksState: TrendingBooksState,
         trendingBooksAction: TrendingBooksAction
-    ): TrendingBooksState {
-        return when (trendingBooksAction) {
-            is TrendingBooksAction.FetchTrendingBooks -> trendingBooksState.copy(
-                isLoadingPage = true,
-                bookList = emptyList(),
-                currentPosition = 0,
-                errorStatus = ErrorStatus.NO_ERROR,
-            )
+    ) {
+        when (trendingBooksAction) {
+            is TrendingBooksAction.FetchTrendingBooks -> _trendingBooksState.update {
+                it.copy(
+                    isLoadingPage = true,
+                    bookList = emptyList(),
+                    currentPosition = 0,
+                    errorStatus = ErrorStatus.NO_ERROR,
+                )
+            }
 
-            is TrendingBooksAction.FetchMoreTrendingBooks -> {
-                trendingBooksState.copy(
+            is TrendingBooksAction.FetchMoreTrendingBooks -> _trendingBooksState.update {
+                it.copy(
                     isLoadingPage = false
                 )
             }
 
             is TrendingBooksAction.LoadSuccess -> {
-                val currentList = trendingBooksState.bookList ?: emptyList()
-                val newList=currentList + trendingBooksAction.bookResponse.docs!!
+                val currentList = _trendingBooksState.value.bookList ?: emptyList()
+                val newList = currentList + trendingBooksAction.bookResponse.docs!!
                 Log.d("TrendingBooksViewModel", "offset ${trendingBooksAction.offset.toString()}")
-                trendingBooksState.copy(
-                    isLoadingPage = false,
-                    errorStatus = ErrorStatus.NO_ERROR,
-                    bookList = newList,
-                    currentPosition = trendingBooksAction.offset,
-                )
+                _trendingBooksState.update {
+                    it.copy(
+                        isLoadingPage = false,
+                        errorStatus = ErrorStatus.NO_ERROR,
+                        bookList = newList,
+                        currentPosition = trendingBooksAction.offset,
+                    )
+                }
             }
 
-            is TrendingBooksAction.LoadError ->{
-                if(!trendingBooksState.bookList.isNullOrEmpty()&&trendingBooksAction.errorStatus==ErrorStatus.NOTHING_FOUND){
-                    trendingBooksState.copy(
-                        isLoadingPage = false,
-                        errorStatus = ErrorStatus.NO_ERROR
-                    )
-                }else{
-                    trendingBooksState.copy(
-                        isLoadingPage = false,
-                        errorStatus = trendingBooksAction.errorStatus
-                    )
+            is TrendingBooksAction.LoadError -> {
+                if (!_trendingBooksState.value.bookList.isNullOrEmpty() && trendingBooksAction.errorStatus == ErrorStatus.NOTHING_FOUND) {
+                    _trendingBooksState.update {
+                        it.copy(
+                            isLoadingPage = false,
+                            errorStatus = ErrorStatus.NO_ERROR
+                        )
+                    }
+                } else {
+                    _trendingBooksState.update {
+                        it.copy(
+                            isLoadingPage = false,
+                            errorStatus = trendingBooksAction.errorStatus
+                        )
+                    }
                 }
             }
         }
@@ -111,12 +123,12 @@ class TrendingBooksViewModel(
         }
     }
 
-    private fun fetchBooks( isInitialLoad: Boolean,  trendingBooksAction: TrendingBooksAction) {
-        trendingBooksState = reduce(trendingBooksState, trendingBooksAction)
-        val query= TRENDING_BOOKS
-        val limit=12
-        val offset = if (isInitialLoad) 0 else trendingBooksState.currentPosition + limit
-        if (!isInitialLoad && trendingBooksState.isLoadingPage) return
+    private fun fetchBooks(isInitialLoad: Boolean, trendingBooksAction: TrendingBooksAction) {
+        reduce(trendingBooksAction)
+        val query = TRENDING_BOOKS
+        val limit = 12
+        val offset = if (isInitialLoad) 0 else _trendingBooksState.value.currentPosition + limit
+        if (!isInitialLoad && _trendingBooksState.value.isLoadingPage) return
         viewModelScope.launch(ioDispatcher) {
             val result = trendingBooksListUseCase(query, offset, limit)
             dispatch(trendingBooksAction = result)

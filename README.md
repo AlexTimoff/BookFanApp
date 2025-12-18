@@ -28,8 +28,8 @@
 В проекте используется Open Library Api (https://openlibrary.org/developers/api).
 
 **Используемые ресурсы**: 
-Для векторных изображений -  https://ru.freepik.com/
-Для векторной анимации - https://lottiefiles.com/
+1. Для векторных изображений -  https://ru.freepik.com/
+2. Для векторной анимации - https://lottiefiles.com/
 
 **Как запустить**:
 1. Склонируйте репозиторий:

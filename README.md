@@ -27,10 +27,6 @@
 **API**: 
 В проекте используется Open Library Api (https://openlibrary.org/developers/api).
 
-**Используемые ресурсы**: 
-1. Для векторных изображений -  https://ru.freepik.com/
-2. Для векторной анимации - https://lottiefiles.com/
-
 **Как запустить**:
 1. Склонируйте репозиторий:
    https://github.com/AlexTimoff/BookFanApp.git

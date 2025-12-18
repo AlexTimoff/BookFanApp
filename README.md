@@ -34,9 +34,6 @@
 3. Убедитесь, что установлены необходимые SDK, плагины, и что Gradle успешно собрал проект.
 4. Запустите приложение на эмуляторе или физическом устройстве через Android Studio.
 
-**Лицензия**:  
-[MIT](https://github.com/AlexTimoff/BookFanApp/edit/main/LICENSE)
-
 **Автор**:
 
 [AlexTimoff](https://github.com/AlexTimoff)

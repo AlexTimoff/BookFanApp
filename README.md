@@ -41,5 +41,6 @@
 **Лицензия**:  
 [MIT](https://github.com/AlexTimoff/BookFanApp/edit/main/LICENSE)
 
-**Автор**: 
+**Автор**:
+
 [AlexTimoff](https://github.com/AlexTimoff)
